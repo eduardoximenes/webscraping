@@ -4,42 +4,44 @@ import re
 import pandas as pd
 import math
 from time import sleep
-
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+import requests
 
 url = 'https://portal.gupy.io/job-search/term=enfermeiro'
-headers = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"}
+headers = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                         "Chrome/116.0.0.0 Safari/537.36"}
 
+# Inicializar o navegador Chrome usando o Selenium
 driver = webdriver.Chrome()
-driver.get('url')
+driver.get(url)
+
+# Rolar até o final da página repetidamente
 while True:
-    driver.find_element_by_tag_name('body').send_keys(Keys.END)
-    sleep(1)
+    body = driver.find_element(By.TAG_NAME, 'body')
+    body.send_keys(Keys.END)
+    sleep(0.5)
     if driver.execute_script("return window.scrollY + window.innerHeight >= document.documentElement.scrollHeight"):
         break
 
-site = requests.get(url, headers=headers)
-soup = BeautifulSoup(site.content, 'html.parser')
-
-dic_produtos = {'Empresa':[],'Cargo':[], 'Tipo de vaga':[], 'Modalidade':[], 'Cidade':[] }
-produtos = soup.find_all('div', class_=re.compile('dgHpeN'))
-
-    for produto in produtos:
-        marca = produto.find('span', class_=re.compile('nameCard')).get_text().strip()
-        preco = produto.find('span', class_=re.compile('priceCard')).get_text().strip()
-
-        print(marca, preco)
-
-        dic_produtos['marca'].append(marca)
-        dic_produtos['preco'].append(preco)
-
-df = pd.DataFrame(dic_produtos)
-df.to_csv('seu/path/preco_cadeira.csv', encoding='utf-8', sep=';')
-
-
-
+# Obter o conteúdo da página após rolar até o final
+page_content = driver.page_source
 driver.quit()
 
-#infos que eu quero
-# Empresa,	Cargo da vaga,	Tipo de vaga, Modalidade de trabalho,	Cidade
+# Usar BeautifulSoup para analisar o conteúdo da página
+soup = BeautifulSoup(page_content, 'html.parser')
+
+#, 'tipo de vaga':[], 'modalidade':[], 'cidade':[]
+dic_produtos = {'empresa':[],'cargo':[]}
+produtos = soup.find_all('div', class_=re.compile('dgHpeN'))
+
+for produto in produtos:
+    empresa = produto.find('p', class_=re.compile('cQyvth')).get_text().strip()
+    cargo = produto.find('h2', class_=re.compile('XNNQ')).get_text().strip()
+    dic_produtos['empresa'].append(empresa)
+    dic_produtos['cargo'].append(cargo)
+    #print(empresa, cargo)
+
+df = pd.DataFrame(dic_produtos)
+df.to_csv('C:/Users/User/PycharmProjects/vagas.csv', encoding='utf-8', sep=',')
