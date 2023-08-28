@@ -32,7 +32,7 @@ driver.quit()
 # Usar BeautifulSoup para analisar o conteúdo da página
 soup = BeautifulSoup(page_content, 'html.parser')
 
-#, 'tipo de vaga':[], 'modalidade':[], 'cidade':[]
+# 'tipo de vaga':[], 'modalidade':[], 'cidade':[]
 dic_produtos = {'empresa':[],'cargo':[]}
 produtos = soup.find_all('div', class_=re.compile('dgHpeN'))
 
