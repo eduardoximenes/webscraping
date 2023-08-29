@@ -2,46 +2,58 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import pandas as pd
-import math
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-import requests
 
-url = 'https://portal.gupy.io/job-search/term=enfermeiro'
-headers = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                         "Chrome/116.0.0.0 Safari/537.36"}
+# Meu objeto de analise e pesquisa
+vagas = {'desenvolvedor%20front%20end','desenvolvedor%20back%20end', 'banco%20de%20dados', 'analista%20de%20dados',
+         'devops'}
+info_vagas = {'empresa':[],'cargo':[], 'modalidade':[], 'cidade':[]}
 
-# Inicializar o navegador Chrome usando o Selenium
-driver = webdriver.Chrome()
-driver.get(url)
+for vaga in vagas:
 
-# Rolar até o final da página repetidamente
-while True:
-    body = driver.find_element(By.TAG_NAME, 'body')
-    body.send_keys(Keys.END)
-    sleep(0.5)
-    if driver.execute_script("return window.scrollY + window.innerHeight >= document.documentElement.scrollHeight"):
-        break
+    url = f'https://portal.gupy.io/job-search/term={vaga}'
 
-# Obter o conteúdo da página após rolar até o final
-page_content = driver.page_source
-driver.quit()
+    # Inicializar o navegador Chrome usando o Selenium
+    driver = webdriver.Chrome()
+    driver.get(url)
 
-# Usar BeautifulSoup para analisar o conteúdo da página
-soup = BeautifulSoup(page_content, 'html.parser')
+    # Rolagem até o fim da página, visando carregar to/do conteúdo
+    while True:
+        body = driver.find_element(By.TAG_NAME, 'body')
+        body.send_keys(Keys.END)
+        sleep(0.5)
+        if driver.execute_script("return window.scrollY + window.innerHeight >= document.documentElement.scrollHeight"):
+            break
 
-# 'tipo de vaga':[], 'modalidade':[], 'cidade':[]
-dic_produtos = {'empresa':[],'cargo':[]}
-produtos = soup.find_all('div', class_=re.compile('dgHpeN'))
+    # Obter o conteúdo da página após rolar até o final
+    page_content = driver.page_source
+    driver.quit()
 
-for produto in produtos:
-    empresa = produto.find('p', class_=re.compile('cQyvth')).get_text().strip()
-    cargo = produto.find('h2', class_=re.compile('XNNQ')).get_text().strip()
-    dic_produtos['empresa'].append(empresa)
-    dic_produtos['cargo'].append(cargo)
-    #print(empresa, cargo)
+    # Usar BeautifulSoup para analisar o conteúdo da página
+    soup = BeautifulSoup(page_content, 'html.parser')
 
-df = pd.DataFrame(dic_produtos)
-df.to_csv('C:/Users/User/PycharmProjects/vagas.csv', encoding='utf-8', sep=',')
+    infos = soup.find_all('div', class_=re.compile('dgHpeN'))
+
+    for info in infos:
+        empresa = info.find('p', class_=re.compile('cQyvth')).get_text().strip()
+        cargo = info.find('h2', class_=re.compile('XNNQ')).get_text().strip()
+
+        spans = info.find_all('span', class_=re.compile('cezNaf'))
+
+        # Verificar se há pelo menos dois spans (modalidade e cidade)
+        if len(spans) >= 2:
+            cidade = spans[0].get_text().strip()
+            modalidade = spans[1].get_text().strip()
+
+        info_vagas['empresa'].append(empresa)
+        info_vagas['cargo'].append(cargo)
+        info_vagas['modalidade'].append(modalidade)
+        info_vagas['cidade'].append(cidade)
+
+#Por opcao vou salvar todas, no mesmo arquivo
+df = pd.DataFrame(info_vagas)
+df.to_csv(f'C:/Users/User/PycharmProjects/webscraping/vagas_abertas.csv', encoding='utf-8', sep=',')
+
