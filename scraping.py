@@ -8,9 +8,9 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 
 # Meu objeto de analise e pesquisa
-vagas = {'desenvolvedor%20front%20end','desenvolvedor%20back%20end', 'banco%20de%20dados', 'analista%20de%20dados',
+vagas = {'desenvolvedor%20front%20end','desenvolvedor%20back%20end', 'banco%20de%20dados', 'fullstack',
          'devops'}
-info_vagas = {'empresa':[],'cargo':[], 'modalidade':[], 'cidade':[]}
+info_vagas = {'empresa':[],'cargo':[], 'modalidade':[], 'cidade':[], 'categoria':[]}
 
 for vaga in vagas:
 
@@ -24,7 +24,7 @@ for vaga in vagas:
     while True:
         body = driver.find_element(By.TAG_NAME, 'body')
         body.send_keys(Keys.END)
-        sleep(0.5)
+        sleep(1)
         if driver.execute_script("return window.scrollY + window.innerHeight >= document.documentElement.scrollHeight"):
             break
 
@@ -36,7 +36,7 @@ for vaga in vagas:
     soup = BeautifulSoup(page_content, 'html.parser')
 
     infos = soup.find_all('div', class_=re.compile('dgHpeN'))
-
+    categoria = soup.find('h1', class_=re.compile('bGwhtT')).get_text().strip()
     for info in infos:
         empresa = info.find('p', class_=re.compile('cQyvth')).get_text().strip()
         cargo = info.find('h2', class_=re.compile('XNNQ')).get_text().strip()
@@ -52,8 +52,10 @@ for vaga in vagas:
         info_vagas['cargo'].append(cargo)
         info_vagas['modalidade'].append(modalidade)
         info_vagas['cidade'].append(cidade)
+        info_vagas['categoria'].append(categoria)
+
 
 #Por opcao vou salvar todas, no mesmo arquivo
 df = pd.DataFrame(info_vagas)
-df.to_csv(f'C:/Users/User/PycharmProjects/webscraping/vagas_abertas.csv', encoding='utf-8', sep=',')
+df.to_csv(f'C:/Users/User/PycharmProjects/webscraping/vagas_abertas.csv', encoding='utf-8', sep=';')
 
