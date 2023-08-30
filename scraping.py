@@ -57,5 +57,5 @@ for vaga in vagas:
 
 #Por opcao vou salvar todas, no mesmo arquivo
 df = pd.DataFrame(info_vagas)
-df.to_csv(f'C:/Users/User/PycharmProjects/webscraping/vagas_abertas.csv', encoding='utf-8', sep=';')
+df.to_csv(f'C:/Users/User/PycharmProjects/webscraping/vagas_abertas.csv', encoding='utf-8', sep=',')
 
